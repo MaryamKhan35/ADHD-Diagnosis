@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Therapy Resources | EEG-ADHD Classification System</title>
+    <meta name="description" content="Comprehensive therapy resources and evidence-based interventions for ADHD management and treatment.">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Core Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css">
+    
+    <style>
+        :root {
+            --medical-blue: #2563eb;
+            --medical-teal: #0891b2;
+            --medical-green: #059669;
+            --medical-amber: #d97706;
+            --medical-gray: #64748b;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #f1f5f9;
+        }
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        body {
+            background: var(--bg-primary);
+        }
+        
+        .medical-gradient {
+            background: linear-gradient(135deg, var(--medical-blue) 0%, var(--medical-teal) 100%);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .medical-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+        
+        .medical-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .therapy-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid var(--medical-blue);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .therapy-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .therapy-card.selected {
+            border-left-color: var(--medical-green);
+            background: rgba(5, 150, 105, 0.05);
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .filter-btn.active {
+            border-color: var(--medical-blue);
+            background: var(--medical-blue);
+            color: white;
+        }
+        
+        .filter-btn:hover {
+            border-color: var(--medical-teal);
+        }
+        
+        .timer-display {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--medical-blue);
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .timer-circle {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring-circle {
+            transition: stroke-dashoffset 1s linear;
+        }
+        
+        .exercise-timer {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .breathing-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: var(--medical-blue);
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            transition: transform 4s ease-in-out;
+        }
+        
+        .breathing-circle.inhale {
+            transform: scale(1.3);
+        }
+        
+        .breathing-circle.exhale {
+            transform: scale(0.8);
+        }
+        
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+        
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--medical-blue);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background: var(--medical-blue);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover {
+            background: var(--medical-teal);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--medical-blue);
+            border: 2px solid var(--medical-blue);
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-secondary:hover {
+            background: var(--medical-blue);
+            color: white;
+        }
+        
+        .search-box {
+            position: relative;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 48px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--medical-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+        
+        .difficulty-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .difficulty-easy {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .difficulty-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .difficulty-hard {
+            background: #fecaca;
+            color: #991b1b;
+        }
+        
+        .duration-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--medical-gray);
+            font-size: 12px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass-effect">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-xl font-bold text-gray-900">EEG-ADHD Classifier</h1>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="index.html" class="nav-link text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium">Home</a>
+                        <a href="#" class="nav-link text-gray-900 hover:text-blue-600 px-3 py-2 text-sm font-medium">Resources</a>
+                        <a href="about.html" class="nav-link text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium">About</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section class="pt-24 pb-12 px-4 sm:px-6 lg:px-8" style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(8, 145, 178, 0.1) 100%);">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 fade-in">
+                    ADHD Therapy Resources
+                </h1>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-8 fade-in">
+                    Comprehensive collection of evidence-based therapies, exercises, and interventions 
+                    for effective ADHD management and improved cognitive function.
+                </p>
+                
+                <!-- Search Box -->
+                <div class="search-box fade-in">
+                    <div class="search-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <input type="text" id="search-input" class="search-input" placeholder="Search therapies, exercises, or resources...">
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Filter Section -->
+    <section class="py-8 px-4 sm:px-6 lg:px-8 bg-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-wrap justify-center gap-4 fade-in">
+                <button class="filter-btn active" data-filter="all">All Resources</button>
+                <button class="filter-btn" data-filter="behavioral">Behavioral Therapy</button>
+                <button class="filter-btn" data-filter="neurofeedback">Neurofeedback</button>
+                <button class="filter-btn" data-filter="mindfulness">Mindfulness</button>
+                <button class="filter-btn" data-filter="exercise">Physical Exercise</button>
+                <button class="filter-btn" data-filter="nutrition">Nutrition</button>
+                <button class="filter-btn" data-filter="cognitive">Cognitive Training</button>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Interactive Exercise Tools -->
+    <section class="py-16 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Interactive Exercise Tools</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    Practice evidence-based exercises designed to improve focus, attention, and cognitive function.
+                </p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-12">
+                <!-- Focus Timer -->
+                <div class="exercise-timer fade-in">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Focus Timer</h3>
+                    <p class="text-gray-600 mb-6">Structured focus sessions using the Pomodoro Technique</p>
+                    
+                    <div class="timer-circle mb-6">
+                        <svg class="w-full h-full">
+                            <circle cx="100" cy="100" r="90" stroke="#e5e7eb" stroke-width="8" fill="none"/>
+                            <circle id="timer-progress" cx="100" cy="100" r="90" stroke="#2563eb" stroke-width="8" 
+                                    fill="none" stroke-linecap="round" stroke-dasharray="565" stroke-dashoffset="565"/>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="timer-display" id="timer-display">25:00</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center gap-4 mb-4">
+                        <button id="timer-start" class="btn-primary">Start</button>
+                        <button id="timer-pause" class="btn-secondary" disabled>Pause</button>
+                        <button id="timer-reset" class="btn-secondary">Reset</button>
+                    </div>
+                    
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600 mb-2">Session Type:</p>
+                        <div class="flex justify-center gap-2">
+                            <button class="filter-btn active" data-timer="focus">Focus (25min)</button>
+                            <button class="filter-btn" data-timer="short">Short Break (5min)</button>
+                            <button class="filter-btn" data-timer="long">Long Break (15min)</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Breathing Exercise -->
+                <div class="exercise-timer fade-in">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Breathing Exercise</h3>
+                    <p class="text-gray-600 mb-6">Guided breathing to improve focus and reduce anxiety</p>
+                    
+                    <div class="breathing-circle" id="breathing-circle">
+                        <span id="breathing-text">Breathe</span>
+                    </div>
+                    
+                    <div class="text-center mb-6">
+                        <p class="text-lg font-semibold text-gray-900 mb-2" id="breathing-instruction">Click start to begin</p>
+                        <p class="text-sm text-gray-600">4-7-8 Breathing Technique</p>
+                    </div>
+                    
+                    <div class="flex justify-center gap-4">
+                        <button id="breathing-start" class="btn-primary">Start Exercise</button>
+                        <button id="breathing-stop" class="btn-secondary" disabled>Stop</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Therapy Resources -->
+    <section class="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Therapy Resources</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    Evidence-based therapeutic interventions and techniques for comprehensive ADHD management.
+                </p>
+            </div>
+            
+            <div id="therapy-grid" class="resource-grid">
+                <!-- Behavioral Therapy -->
+                <div class="therapy-card fade-in" data-category="behavioral" data-difficulty="easy" data-duration="30-60 min">
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-900">Cognitive Behavioral Therapy (CBT)</h3>
+                        <span class="difficulty-badge difficulty-easy">Beginner</span>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                        Structured therapy focusing on identifying and changing negative thought patterns and behaviors 
+                        associated with ADHD symptoms.
+                    </p>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="duration-badge">30-60 minutes</span>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Weekly sessions
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">Thought Records</span>
+                        <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">Behavioral Activation</span>
+                        <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">Problem Solving</span>
+                    </div>
+                    <button class="btn-secondary w-full" onclick="openTherapyModal('cbt')">Learn More</button>
+                </div>
+                
+                <!-- Neurofeedback -->
+                <div class="therapy-card fade-in" data-category="neurofeedback" data-difficulty="medium" data-duration="45 min">
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-900">Neurofeedback Training</h3>
+                        <span class="difficulty-badge difficulty-medium">Intermediate</span>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                        EEG-based biofeedback training that helps individuals learn to regulate their brainwave patterns 
+                        for improved attention and focus.
+                    </p>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="duration-badge">45 minutes</span>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            2-3x per week
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full">Theta/Beta Training</span>
+                        <span class="px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full">SMR Enhancement</span>
+                        <span class="px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full">Real-time Feedback</span>
+                    </div>
+                    <button class="btn-secondary w-full" onclick="openTherapyModal('neurofeedback')">Learn More</button>
+                </div>
+                
+                <!-- Mindfulness -->
+                <div class="therapy-card fade-in" data-category="mindfulness" data-difficulty="easy" data-duration="10-20 min">
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-900">Mindfulness Meditation</h3>
+                        <span class="difficulty-badge difficulty-easy">Beginner</span>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                        Mindfulness practices designed to improve attention regulation, emotional control, 
+                        and present-moment awareness for ADHD management.
+                    </p>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="duration-badge">10-20 minutes</span>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Daily practice
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="px-3 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">Body Scan</span>
+                        <span class="px-3 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">Breathing Focus</span>
+                        <span class="px-3 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">Loving Kindness</span>
+                    </div>
+                    <button class="btn-secondary w-full" onclick="openTherapyModal('mindfulness')">Learn More</button>
+                </div>
+                
+                <!-- Physical Exercise -->
+                <div class="therapy-card fade-in" data-category="exercise" data-difficulty="medium" data-duration="30-45 min">
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-900">Physical Exercise Program</h3>
+                        <span class="difficulty-badge difficulty-medium">Intermediate</span>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                        Structured physical activity programs that improve executive function, attention, 
+                        and behavioral regulation through regular exercise.
+                    </p>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="duration-badge">30-45 minutes</span>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            3-5x per week
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="px-3 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">Aerobic Exercise</span>
+                        <span class="px-3 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">Coordination Drills</span>
+                        <span class="px-3 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">Yoga</span>
+                    </div>
+                    <button class="btn-secondary w-full" onclick="openTherapyModal('exercise')">Learn More</button>
+                </div>
+                
+                <!-- Cognitive Training -->
+                <div class="therapy-card fade-in" data-category="cognitive" data-difficulty="hard" data-duration="20-30 min">
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-900">Cognitive Training</h3>
+                        <span class="difficulty-badge difficulty-hard">Advanced</span>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                        Computerized cognitive training programs designed to improve working memory, 
+                        attention control, and executive function skills.
+                    </p>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="duration-badge">20-30 minutes</span>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            4-5x per week
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="px-3 py-1 bg-red-100 text-red-800 text-xs rounded-full">Working Memory</span>
+                        <span class="px-3 py-1 bg-red-100 text-red-800 text-xs rounded-full">Attention Training</span>
+                        <span class="px-3 py-1 bg-red-100 text-red-800 text-xs rounded-full">Processing Speed</span>
+                    </div>
+                    <button class="btn-secondary w-full" onclick="openTherapyModal('cognitive')">Learn More</button>
+                </div>
+                
+                <!-- Nutritional Support -->
+                <div class="therapy-card fade-in" data-category="nutrition" data-difficulty="easy" data-duration="ongoing">
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-900">Nutritional Support</h3>
+                        <span class="difficulty-badge difficulty-easy">Beginner</span>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                        Dietary interventions and nutritional strategies to support brain health 
+                        and optimize neurotransmitter function for ADHD management.
+                    </p>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="duration-badge">Daily routine</span>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Continuous
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Omega-3</span>
+                        <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Protein Timing</span>
+                        <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Micronutrients</span>
+                    </div>
+                    <button class="btn-secondary w-full" onclick="openTherapyModal('nutrition')">Learn More</button>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Progress Tracker -->
+    <section class="py-16 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Progress Tracker</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    Track your therapy implementation and monitor improvements in symptoms and functioning.
+                </p>
+            </div>
+            
+            <div class="medical-card p-8 fade-in">
+                <form id="progress-form">
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Therapy Type</label>
+                            <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Select therapy...</option>
+                                <option value="cbt">Cognitive Behavioral Therapy</option>
+                                <option value="neurofeedback">Neurofeedback</option>
+                                <option value="mindfulness">Mindfulness</option>
+                                <option value="exercise">Physical Exercise</option>
+                                <option value="cognitive">Cognitive Training</option>
+                                <option value="nutrition">Nutritional Support</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Session Date</label>
+                            <input type="date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Session Duration (minutes)</label>
+                            <input type="number" min="1" max="120" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Difficulty Level (1-10)</label>
+                            <input type="range" min="1" max="10" value="5" class="w-full" id="difficulty-slider">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>Easy</span>
+                                <span id="difficulty-value">5</span>
+                                <span>Hard</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Notes & Observations</label>
+                        <textarea rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="How did the session go? Any improvements or challenges?"></textarea>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn-primary">Log Progress</button>
+                    </div>
+                </form>
+                
+                <div id="progress-history" class="mt-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Sessions</h3>
+                    <div id="progress-list" class="space-y-3">
+                        <!-- Progress entries will be added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h3 class="text-lg font-semibold mb-4">EEG-ADHD Classification System</h3>
+                <p class="text-gray-400 mb-4">Advanced neurodiagnostic technology for healthcare professionals</p>
+                <p class="text-sm text-gray-500">
+                    © 2025 EEG-ADHD Classification System. All rights reserved. 
+                    For research and educational purposes.
+                </p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Therapy Modal -->
+    <div id="therapy-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 id="modal-title" class="text-2xl font-bold text-gray-900"></h3>
+                        <button onclick="closeTherapyModal()" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="modal-content">
+                        <!-- Modal content will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Resources page functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeResourcesPage();
+        });
+        
+        function initializeResourcesPage() {
+            initializeScrollAnimations();
+            initializeFilters();
+            initializeSearch();
+            initializeTimers();
+            initializeProgressTracker();
+        }
+        
+        // Scroll animations
+        function initializeScrollAnimations() {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, observerOptions);
+            
+            document.querySelectorAll('.fade-in').forEach(el => {
+                observer.observe(el);
+            });
+        }
+        
+        // Filter functionality
+        function initializeFilters() {
+            const filterButtons = document.querySelectorAll('.filter-btn[data-filter]');
+            const therapyCards = document.querySelectorAll('.therapy-card');
+            
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all filter buttons
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    const filter = button.dataset.filter;
+                    
+                    therapyCards.forEach(card => {
+                        if (filter === 'all' || card.dataset.category === filter) {
+                            card.style.display = 'block';
+                            anime({
+                                targets: card,
+                                opacity: [0, 1],
+                                translateY: [20, 0],
+                                duration: 300,
+                                easing: 'easeOutQuad'
+                            });
+                        } else {
+                            anime({
+                                targets: card,
+                                opacity: [1, 0],
+                                translateY: [0, -20],
+                                duration: 200,
+                                easing: 'easeInQuad',
+                                complete: () => {
+                                    card.style.display = 'none';
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+        }
+        
+        // Search functionality
+        function initializeSearch() {
+            const searchInput = document.getElementById('search-input');
+            const therapyCards = document.querySelectorAll('.therapy-card');
+            
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                
+                therapyCards.forEach(card => {
+                    const title = card.querySelector('h3').textContent.toLowerCase();
+                    const description = card.querySelector('p').textContent.toLowerCase();
+                    const tags = Array.from(card.querySelectorAll('.px-3')).map(tag => tag.textContent.toLowerCase());
+                    
+                    const matches = title.includes(searchTerm) || 
+                                  description.includes(searchTerm) || 
+                                  tags.some(tag => tag.includes(searchTerm));
+                    
+                    if (matches || searchTerm === '') {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        // Timer functionality
+        function initializeTimers() {
+            initializeFocusTimer();
+            initializeBreathingExercise();
+        }
+        
+        function initializeFocusTimer() {
+            let timerInterval;
+            let timeLeft = 25 * 60; // 25 minutes in seconds
+            let isRunning = false;
+            let sessionType = 'focus';
+            
+            const timerDisplay = document.getElementById('timer-display');
+            const startBtn = document.getElementById('timer-start');
+            const pauseBtn = document.getElementById('timer-pause');
+            const resetBtn = document.getElementById('timer-reset');
+            const progressCircle = document.getElementById('timer-progress');
+            
+            const sessionTypes = {
+                focus: 25 * 60,
+                short: 5 * 60,
+                long: 15 * 60
+            };
+            
+            function updateDisplay() {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                const totalTime = sessionTypes[sessionType];
+                const progress = (totalTime - timeLeft) / totalTime;
+                const circumference = 2 * Math.PI * 90;
+                const offset = circumference - (progress * circumference);
+                progressCircle.style.strokeDashoffset = offset;
+            }
+            
+            function startTimer() {
+                if (!isRunning) {
+                    isRunning = true;
+                    startBtn.disabled = true;
+                    pauseBtn.disabled = false;
+                    
+                    timerInterval = setInterval(() => {
+                        timeLeft--;
+                        updateDisplay();
+                        
+                        if (timeLeft <= 0) {
+                            clearInterval(timerInterval);
+                            isRunning = false;
+                            startBtn.disabled = false;
+                            pauseBtn.disabled = true;
+                            
+                            // Play completion sound (simulated)
+                            showNotification('Focus session completed!', 'success');
+                        }
+                    }, 1000);
+                }
+            }
+            
+            function pauseTimer() {
+                if (isRunning) {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    startBtn.disabled = false;
+                    pauseBtn.disabled = true;
+                }
+            }
+            
+            function resetTimer() {
+                clearInterval(timerInterval);
+                isRunning = false;
+                timeLeft = sessionTypes[sessionType];
+                startBtn.disabled = false;
+                pauseBtn.disabled = true;
+                updateDisplay();
+            }
+            
+            startBtn.addEventListener('click', startTimer);
+            pauseBtn.addEventListener('click', pauseTimer);
+            resetBtn.addEventListener('click', resetTimer);
+            
+            // Session type buttons
+            document.querySelectorAll('[data-timer]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-timer]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    sessionType = btn.dataset.timer;
+                    resetTimer();
+                });
+            });
+            
+            updateDisplay();
+        }
+        
+        function initializeBreathingExercise() {
+            let breathingInterval;
+            let isRunning = false;
+            let phase = 'inhale'; // inhale, hold, exhale
+            let phaseTime = 0;
+            
+            const breathingCircle = document.getElementById('breathing-circle');
+            const breathingText = document.getElementById('breathing-text');
+            const breathingInstruction = document.getElementById('breathing-instruction');
+            const startBtn = document.getElementById('breathing-start');
+            const stopBtn = document.getElementById('breathing-stop');
+            
+            const phases = {
+                inhale: { duration: 4, text: 'Inhale', instruction: 'Breathe in slowly through your nose' },
+                hold: { duration: 7, text: 'Hold', instruction: 'Hold your breath gently' },
+                exhale: { duration: 8, text: 'Exhale', instruction: 'Exhale slowly through your mouth' }
+            };
+            
+            function updateBreathing() {
+                const currentPhase = phases[phase];
+                breathingText.textContent = currentPhase.text;
+                breathingInstruction.textContent = currentPhase.instruction;
+                
+                if (phase === 'inhale') {
+                    breathingCircle.classList.add('inhale');
+                    breathingCircle.classList.remove('exhale');
+                } else if (phase === 'exhale') {
+                    breathingCircle.classList.add('exhale');
+                    breathingCircle.classList.remove('inhale');
+                } else {
+                    breathingCircle.classList.remove('inhale', 'exhale');
+                }
+            }
+            
+            function startBreathing() {
+                if (!isRunning) {
+                    isRunning = true;
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    phase = 'inhale';
+                    phaseTime = 0;
+                    updateBreathing();
+                    
+                    breathingInterval = setInterval(() => {
+                        phaseTime++;
+                        
+                        if (phaseTime >= phases[phase].duration) {
+                            phaseTime = 0;
+                            
+                            if (phase === 'inhale') {
+                                phase = 'hold';
+                            } else if (phase === 'hold') {
+                                phase = 'exhale';
+                            } else {
+                                phase = 'inhale';
+                            }
+                            
+                            updateBreathing();
+                        }
+                    }, 1000);
+                }
+            }
+            
+            function stopBreathing() {
+                if (isRunning) {
+                    clearInterval(breathingInterval);
+                    isRunning = false;
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    breathingCircle.classList.remove('inhale', 'exhale');
+                    breathingText.textContent = 'Breathe';
+                    breathingInstruction.textContent = 'Click start to begin';
+                }
+            }
+            
+            startBtn.addEventListener('click', startBreathing);
+            stopBtn.addEventListener('click', stopBreathing);
+        }
+        
+        // Progress tracker
+        function initializeProgressTracker() {
+            const form = document.getElementById('progress-form');
+            const difficultySlider = document.getElementById('difficulty-slider');
+            const difficultyValue = document.getElementById('difficulty-value');
+            
+            difficultySlider.addEventListener('input', (e) => {
+                difficultyValue.textContent = e.target.value;
+            });
+            
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                const therapyType = form.querySelector('select').value;
+                const sessionDate = form.querySelector('input[type="date"]').value;
+                const duration = form.querySelector('input[type="number"]').value;
+                const difficulty = difficultySlider.value;
+                const notes = form.querySelector('textarea').value;
+                
+                if (therapyType && sessionDate && duration) {
+                    addProgressEntry({
+                        therapyType,
+                        sessionDate,
+                        duration,
+                        difficulty,
+                        notes
+                    });
+                    
+                    form.reset();
+                    difficultyValue.textContent = '5';
+                    showNotification('Progress logged successfully!', 'success');
+                } else {
+                    showNotification('Please fill in all required fields.', 'error');
+                }
+            });
+        }
+        
+        function addProgressEntry(entry) {
+            const progressList = document.getElementById('progress-list');
+            const entryElement = document.createElement('div');
+            entryElement.className = 'bg-gray-50 p-4 rounded-lg';
+            
+            const therapyNames = {
+                cbt: 'Cognitive Behavioral Therapy',
+                neurofeedback: 'Neurofeedback',
+                mindfulness: 'Mindfulness',
+                exercise: 'Physical Exercise',
+                cognitive: 'Cognitive Training',
+                nutrition: 'Nutritional Support'
+            };
+            
+            entryElement.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-semibold text-gray-900">${therapyNames[entry.therapyType] || entry.therapyType}</h4>
+                    <span class="text-sm text-gray-500">${entry.sessionDate}</span>
+                </div>
+                <div class="flex gap-4 text-sm text-gray-600 mb-2">
+                    <span>Duration: ${entry.duration} min</span>
+                    <span>Difficulty: ${entry.difficulty}/10</span>
+                </div>
+                ${entry.notes ? `<p class="text-sm text-gray-700">${entry.notes}</p>` : ''}
+            `;
+            
+            progressList.insertBefore(entryElement, progressList.firstChild);
+        }
+        
+        // Therapy modal
+        function openTherapyModal(therapyType) {
+            const modal = document.getElementById('therapy-modal');
+            const title = document.getElementById('modal-title');
+            const content = document.getElementById('modal-content');
+            
+            const therapyData = {
+                cbt: {
+                    title: 'Cognitive Behavioral Therapy (CBT)',
+                    content: `
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="text-lg font-semibold mb-2">Overview</h4>
+                                <p class="text-gray-600">CBT is a structured, goal-oriented therapy that helps individuals identify and change negative thought patterns and behaviors associated with ADHD symptoms.</p>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold mb-2">Key Techniques</h4>
+                                <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                    <li>Thought records and cognitive restructuring</li>
+                                    <li>Behavioral activation and activity scheduling</li>
+                                    <li>Problem-solving skills training</li>
+                                    <li>Time management and organization strategies</li>
+                                    <li>Mindfulness and attention training</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold mb-2">Expected Benefits</h4>
+                                <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                    <li>Improved emotional regulation</li>
+                                    <li>Better impulse control</li>
+                                    <li>Enhanced problem-solving abilities</li>
+                                    <li>Reduced procrastination</li>
+                                    <li>Increased self-esteem</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold mb-2">Getting Started</h4>
+                                <p class="text-gray-600">Begin with 30-60 minute sessions, 1-2 times per week. Work with a qualified CBT therapist who has experience with ADHD.</p>
+                            </div>
+                        </div>
+                    `
+                },
+                neurofeedback: {
+                    title: 'Neurofeedback Training',
+                    content: `
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="text-lg font-semibold mb-2">Overview</h4>
+                                <p class="text-gray-600">Neurofeedback is a type of biofeedback that uses real-time EEG monitoring to help individuals learn to regulate their brainwave patterns.</p>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold mb-2">Training Protocols</h4>
+                                <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                    <li>Theta/Beta ratio training for attention improvement</li>
+                                    <li>Sensorimotor rhythm (SMR) enhancement</li>
+                                    <li>Alpha wave training for relaxation</li>
+                                    <li>Beta wave training for alertness</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold mb-2">Expected Benefits</h4>
+                                <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                    <li>Improved sustained attention</li>
+                                    <li>Reduced hyperactivity and impulsivity</li>
+                                    <li>Better emotional regulation</li>
+                                    <li>Enhanced cognitive performance</li>
+                                    <li>Long-lasting effects post-training</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold mb-2">Treatment Schedule</h4>
+                                <p class="text-gray-600">Typically 2-3 sessions per week, 45 minutes each, for 20-40 sessions total. Results may be noticeable after 10-20 sessions.</p>
+                            </div>
+                        </div>
+                    `
+                },
+                mindfulness: {
+                    title: 'Mindfulness Meditation',
+                    content: `
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="text-lg font-semibold mb-2">Overview</h4>
+                                <p class="text-gray-600">Mindfulness practices help develop present-moment awareness and improve attention regulation, emotional control, and stress management.</p>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold mb-2">Core Practices</h4>
+                                <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                    <li>Mindful breathing and body awareness</li>
+                                    <li>Body scan meditation</li>
+                                    <li>Loving-kindness meditation</li>
+                                    <li>Mindful movement and walking</li>
+                                    <li>Present-moment awareness exercises</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold mb-2">Expected Benefits</h4>
+                                <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                    <li>Improved attention and focus</li>
+                                    <li>Reduced stress and anxiety</li>
+                                    <li>Better emotional regulation</li>
+                                    <li>Enhanced self-awareness</li>
+                                    <li>Improved impulse control</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold mb-2">Daily Practice</h4>
+                                <p class="text-gray-600">Start with 5-10 minutes daily and gradually increase to 20-30 minutes. Consistency is more important than duration.</p>
+                            </div>
+                        </div>
+                    `
+                }
+            };
+            
+            const data = therapyData[therapyType];
+            if (data) {
+                title.textContent = data.title;
+                content.innerHTML = data.content;
+                modal.classList.remove('hidden');
+            }
+        }
+        
+        function closeTherapyModal() {
+            document.getElementById('therapy-modal').classList.add('hidden');
+        }
+        
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-20 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
+                type === 'error' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            anime({
+                targets: notification,
+                translateX: [300, 0],
+                opacity: [0, 1],
+                duration: 300,
+                easing: 'easeOutQuad'
+            });
+            
+            setTimeout(() => {
+                anime({
+                    targets: notification,
+                    translateX: [0, 300],
+                    opacity: [1, 0],
+                    duration: 300,
+                    easing: 'easeInQuad',
+                    complete: () => {
+                        document.body.removeChild(notification);
+                    }
+                });
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

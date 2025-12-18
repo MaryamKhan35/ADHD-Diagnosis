@@ -1,0 +1,183 @@
+data/
+model/
+output/
+*.mat
+*.pkl
+*.pt
+*.pth
+logs/
+venv/
+__pycache__/
+.ipynb_checkpoints/
+start_app.ps1
+stop_app.ps1
+test_both_endpoints.py
+test_cors.py
+test_fc_api.py
+test_fc_mat.py
+test_model.py
+START_HERE.md
+outline.md
+design.md
+check_data.py
+Dockerfile
+README.md
+debug_data.py
+eeg-adhd/front
+frontend/node_modules
+frontend/package-lock.json
+frontend/package.json
+frontend/env.example
+package-lock.json
+interaction.md
+
+
+
+# Node.js
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+pids
+*.pid
+*.seed
+*.pid.lock
+
+lib-cov
+coverage
+*.lcov
+.nyc_output
+
+.grunt
+bower_components
+.lock-wscript
+build/Release
+node_modules/
+jspm_packages/
+web_modules/
+*.tsbuildinfo
+.npm
+.eslintcache
+.stylelintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+.node_repl_history
+*.tgz
+.yarn-integrity
+.env
+.env.*.local
+.cache
+.parcel-cache
+.next
+out
+.nuxt
+dist
+.cache/
+.vuepress/dist
+.temp
+.docusaurus
+.serverless/
+.fusebox/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Uploads and temporary files
+src/public/uploads/*
+!src/public/uploads/.gitkeep
+src/public/temp/
+*.tmp
+*.temp
+
+# ML Models (too large for GitHub)
+src/fastapi/models/
+*.pt
+*.pth
+*.onnx
+*.pb
+*.h5
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Audio files
+*.mp3
+*.wav
+*.m4a
+*.flac
+*.aac
+*.ogg
+
+# Secrets and credentials
+*.pem
+*.key
+*.cert
+credentials.json
+service-account.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating System
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+.dynamodb/
+.tern-port
+.vscode-test
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+env/
+
+# IDEs
+.vscode/
+
+# SvelteKit
+.svelte-kit
+
+# Ignore large model
+Backend/src/fastapi/best_vit_model.pth
+Backend/src/fastapi/fish_classifier_resnet50.h5
+ package.json
+ package-lock.json
+ ARCHITECTURE.md
+    README.md
+    Dockerfile
+PROJECT_REPORT.md
+DIARIZATION_HISTORY_IMPLEMENTATION.md
+requirements.txt
+CHANGES.md
+ARCHITECTURE_EXCALIDRAW.json
