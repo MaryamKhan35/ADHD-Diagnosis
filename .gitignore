@@ -181,3 +181,9 @@ DIARIZATION_HISTORY_IMPLEMENTATION.md
 requirements.txt
 CHANGES.md
 ARCHITECTURE_EXCALIDRAW.json
+test_performance.py
+test_upload.py
+INTEGRATION_SETUP_GUIDE.md
+*.puml
+doc.latex
+*.md

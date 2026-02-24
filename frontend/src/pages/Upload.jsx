@@ -31,7 +31,7 @@ export default function Upload() {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        timeout: 60000, // 60 second timeout
+        timeout: 120000, // 120 second timeout
       })
       
       if (response.data.error) {
@@ -67,11 +67,13 @@ export default function Upload() {
     formData.append('file', file)
     
     try {
-      const response = await axios.post(`${API_URL}/predict`, formData, {
+      const token = localStorage.getItem('token')
+      const response = await axios.post(`${API_URL}/api/patient/upload-and-predict`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
         },
-        timeout: 60000, // 60 second timeout
+        timeout: 120000, // 120 second timeout
       })
       
       if (response.data.error) {
@@ -82,7 +84,10 @@ export default function Upload() {
       } else {
         setResult({
           probability: (response.data.probability_adhd * 100).toFixed(1),
-          map: response.data.map_png_base64
+          classification: response.data.classification,
+          uploadId: response.data.upload_id,
+          map: response.data.map_png_base64,
+          message: response.data.message
         })
         setPreviewMap(response.data.map_png_base64)
         setError(null)
@@ -112,7 +117,7 @@ export default function Upload() {
             <div className="border-2 border-dashed border-blue-300 rounded-lg p-8 mb-6 text-center hover:border-blue-500 transition">
               <input
                 type="file"
-                accept=".mat"
+                accept=".mat,.csv"
                 onChange={handleFileChange}
                 className="hidden"
                 id="file-input"
@@ -166,6 +171,27 @@ export default function Upload() {
             {result && (
               <div className="medical-card p-8 bg-gradient-to-br from-green-50 to-blue-50">
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">Classification Result</h3>
+                
+                {result.message && (
+                  <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                    ✓ {result.message}
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <p className="text-gray-600 mb-2">Classification</p>
+                    <div className={`text-2xl font-bold ${result.classification === 'ADHD' ? 'text-red-600' : 'text-green-600'}`}>
+                      {result.classification}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 mb-2">Upload ID</p>
+                    <div className="text-lg font-mono text-blue-600">
+                      #{result.uploadId}
+                    </div>
+                  </div>
+                </div>
                 
                 <div className="mb-6">
                   <p className="text-gray-600 mb-2">ADHD Risk Probability</p>

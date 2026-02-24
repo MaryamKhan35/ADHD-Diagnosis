@@ -1,7 +1,6 @@
 """
-train_weights.py
-Train CNN on your 528 EEGs → save real prototypes + soft-max weights
-No external data needed uses your 4 .mat cell arrays
+train_with_test_split.py
+Train CNN with proper train/test split: 80% train (with 5-fold CV), 20% test (holdout)
 """
 import scipy.io as sio
 import numpy as np
@@ -12,7 +11,7 @@ import mne
 from scipy.signal import welch
 from scipy.interpolate import griddata
 import sklearn.metrics as skm
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, train_test_split
 import tqdm
 from pathlib import Path
 
@@ -25,7 +24,7 @@ os.environ['MNE_LOGGING_LEVEL'] = 'ERROR'
 FS       = 256
 N_PER_SEG = 512
 F_BANDS  = {"theta": (4, 8), "alpha": (8, 13), "beta": (13, 30), "gamma": (30, 50)}
-N_CHANNELS = 2                  # Cz, F4
+N_CHANNELS = 2
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -35,33 +34,27 @@ def load_all_subjects(mat_paths):
     all_subj = []
     for path, label in zip(mat_paths, [0, 0, 1, 1]):  # FC=0, MC=0, FADHD=1, MADHD=1
         mat = sio.loadmat(path)
-        # Find candidate arrays (either cell arrays or direct ndarrays)
         for k, v in mat.items():
             if k.startswith('__'):
                 continue
             if not isinstance(v, np.ndarray):
                 continue
 
-            # cell array: iterate elements
             if v.dtype == np.object_:
                 for item in v.flat:
                     if not isinstance(item, np.ndarray):
                         continue
-                    # item may be shape (n_subjects, n_samples, n_channels)
                     if item.ndim == 3:
                         n_subj = item.shape[0]
                         for s in range(n_subj):
                             subj = item[s]
-                            # subj likely (n_samples, n_channels) -> transpose
                             if subj.ndim != 2:
                                 continue
-                            # ensure channels x time
                             if subj.shape[1] == N_CHANNELS:
                                 eeg = subj.T
                             elif subj.shape[0] == N_CHANNELS:
                                 eeg = subj
                             else:
-                                # ambiguous: transpose to channels x time if needed
                                 eeg = subj.T
                             if not np.isfinite(eeg).all():
                                 continue
@@ -78,7 +71,6 @@ def load_all_subjects(mat_paths):
                             continue
                         all_subj.append((eeg.astype(np.float32), label))
 
-            # direct ndarray stored at top-level
             elif v.ndim == 3:
                 for s in range(v.shape[0]):
                     subj = v[s]
@@ -107,23 +99,16 @@ def load_all_subjects(mat_paths):
     return all_subj
 
 
-# ---------- 2. PRE-PROCESS → 4×8×8 PSD MAP ----------
+# ---------- 2. PRE-PROCESS -> 4x8x8 PSD MAP ----------
 def preprocess_to_map(eeg_arr):
-    """eeg_arr: (channels, time) → (4, 8, 8) interpolated PSD map
-
-    Notes:
-    - This function is robust to having only a few channels: it falls back
-      to synthetic positions if standard montage lookup fails and fills
-      missing grid values with nearest interpolation.
-    """
+    """eeg_arr: (channels, time) -> (4, 8, 8) interpolated PSD map"""
     info = mne.create_info(ch_names=[f"Ch{i}" for i in range(N_CHANNELS)], sfreq=FS, ch_types=["eeg"] * N_CHANNELS)
     raw = mne.io.RawArray(eeg_arr, info)
-    raw.filter(l_freq=0.5, h_freq=50., fir_design="firwin")
-    raw.notch_filter(50.)
+    raw.filter(l_freq=0.5, h_freq=50., fir_design="firwin", verbose=False)
+    raw.notch_filter(50., verbose=False)
 
-    # try adding a montage; if it fails, we'll create synthetic positions
     try:
-        raw.set_montage("standard_1005")
+        raw.set_montage("standard_1005", verbose=False)
         montage = mne.channels.make_standard_montage("standard_1005")
         ch_pos_map = montage.get_positions()["ch_pos"]
         pos = []
@@ -132,13 +117,11 @@ def preprocess_to_map(eeg_arr):
             if p is None:
                 raise KeyError
             pos.append(p)
-        pos = np.array(pos)  # (n_ch, 3)
+        pos = np.array(pos)
     except Exception:
-        # Fallback: evenly space channels on a circle in the XY plane
         angles = np.linspace(0, 2 * np.pi, N_CHANNELS, endpoint=False)
         pos = np.column_stack([np.cos(angles), np.sin(angles), np.zeros(N_CHANNELS)])
 
-    # simple EOG projection attempt (ignore if fails)
     try:
         projs = mne.preprocessing.compute_proj_eog(raw, n_eeg=2)
         if projs:
@@ -146,34 +129,29 @@ def preprocess_to_map(eeg_arr):
     except Exception:
         pass
 
-    clean = raw.get_data()  # (channels, time)
+    clean = raw.get_data()
 
-    # Welch bands
     freqs, psd = welch(clean, fs=FS, nperseg=N_PER_SEG, axis=-1)
     band_power = []
     for low, high in F_BANDS.values():
         idx = np.logical_and(freqs >= low, freqs <= high)
-        # mean power in band for each channel
         band_power.append(psd[:, idx].mean(axis=-1))
-    bp = np.array(band_power)  # (4, channels)
+    bp = np.array(band_power)
 
-    # interpolate to 8×8 grid
     x_grid = np.linspace(pos[:, 0].min(), pos[:, 0].max(), 8)
     y_grid = np.linspace(pos[:, 1].min(), pos[:, 1].max(), 8)
     xx, yy = np.meshgrid(x_grid, y_grid)
     map_8x8 = np.zeros((4, 8, 8))
     for b in range(4):
-        # if too few points for linear interpolation, use nearest
         try:
             grid_lin = griddata(pos[:, :2], bp[b], (xx, yy), method="linear")
             if np.isnan(grid_lin).any():
                 grid_nearest = griddata(pos[:, :2], bp[b], (xx, yy), method="nearest")
                 grid_lin = np.where(np.isnan(grid_lin), grid_nearest, grid_lin)
         except Exception:
-            # fall back to nearest if linear fails (e.g., not enough points for Delaunay)
             grid_lin = griddata(pos[:, :2], bp[b], (xx, yy), method="nearest")
         map_8x8[b] = grid_lin
-    return map_8x8  # (4, 8, 8)
+    return map_8x8
 
 
 # ---------- 3. CNN ENCODER ----------
@@ -201,7 +179,6 @@ class EncoderCNN(torch.nn.Module):
 # ---------- 4. TRAIN + SAVE ----------
 def train_and_save(weights_dir="model"):
     Path(weights_dir).mkdir(exist_ok=True)
-    # use absolute paths so script works from any directory
     script_dir = Path(__file__).parent
     mat_files = [
         script_dir / "data" / "FC.mat",
@@ -210,46 +187,67 @@ def train_and_save(weights_dir="model"):
         script_dir / "data" / "MADHD.mat"
     ]
     mat_files = [str(p) for p in mat_files]
-    all_subj = load_all_subjects(mat_files)  # list of (eeg, label)
+    all_subj = load_all_subjects(mat_files)
 
-    # ---- K-fold CV (5-fold) ----
+    print("\n" + "="*70)
+    print("TRAIN/TEST SPLIT: 80% TRAIN, 20% TEST")
+    print("="*70)
+    print("Loading and preprocessing all subjects...")
+    
+    # Preprocess all to maps first
+    X_all = []
+    y_all = []
+    for i, (eeg, label) in enumerate(all_subj):
+        if (i + 1) % 100 == 0:
+            print("  Processed {}/{}".format(i + 1, len(all_subj)))
+        map_8x8 = preprocess_to_map(eeg)
+        X_all.append(map_8x8)
+        y_all.append(label)
+
+    X_all = np.array(X_all)
+    y_all = np.array(y_all)
+
+    print("Total samples: {}".format(len(X_all)))
+    print("  Control: {}, ADHD: {}".format(sum(y_all==0), sum(y_all==1)))
+
+    # Split: 80% train, 20% test
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_all, y_all, test_size=0.2, random_state=42, stratify=y_all
+    )
+
+    print("\nTRAIN SET: {} samples".format(len(X_train)))
+    print("  Control: {}, ADHD: {}".format(sum(y_train==0), sum(y_train==1)))
+    print("TEST SET:  {} samples".format(len(X_test)))
+    print("  Control: {}, ADHD: {}".format(sum(y_test==0), sum(y_test==1)))
+
+    # ---- K-fold CV on TRAIN set (5-fold) ----
     kf = KFold(n_splits=5, shuffle=True, random_state=42)
     fold_aucs = []
 
-    # ---- build train + val splits ----
-    X_full = []   # list of 4×8×8 maps
-    y_full = []   # labels
-    for eeg, label in all_subj:
-        map_8x8 = preprocess_to_map(eeg)
-        X_full.append(map_8x8)
-        y_full.append(label)
-    X_full = np.array(X_full)  # (n_subj, 4, 8, 8)
-    y_full = np.array(y_full)  # (n_subj,)
+    print("\n" + "="*70)
+    print("5-FOLD CROSS-VALIDATION ON TRAINING SET")
+    print("="*70)
 
-    # ---- train 5-fold ----
-    for fold, (train_idx, val_idx) in enumerate(kf.split(X_full)):
-        print(f"\n====== FOLD {fold+1}/5 ======")
-        X_train, X_val = X_full[train_idx], X_full[val_idx]
-        y_train, y_val = y_full[train_idx], y_full[val_idx]
+    for fold, (train_idx, val_idx) in enumerate(kf.split(X_train)):
+        print("\n====== FOLD {}/5 ======".format(fold+1))
+        X_fold_train, X_fold_val = X_train[train_idx], X_train[val_idx]
+        y_fold_train, y_fold_val = y_train[train_idx], y_train[val_idx]
 
-        # ---- build PyTorch dataset ----
-        X_train_t = torch.tensor(X_train, dtype=torch.float32)
-        y_train_t = torch.tensor(y_train, dtype=torch.long)
-        X_val_t   = torch.tensor(X_val, dtype=torch.float32)
-        y_val_t   = torch.tensor(y_val, dtype=torch.long)
+        X_fold_train_t = torch.tensor(X_fold_train, dtype=torch.float32)
+        y_fold_train_t = torch.tensor(y_fold_train, dtype=torch.long)
+        X_fold_val_t   = torch.tensor(X_fold_val, dtype=torch.float32)
+        y_fold_val_t   = torch.tensor(y_fold_val, dtype=torch.long)
 
-        dataset = torch.utils.data.TensorDataset(X_train_t, y_train_t)
+        dataset = torch.utils.data.TensorDataset(X_fold_train_t, y_fold_train_t)
         loader  = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
 
-        # ---- model & optimizer ----
         cnn = EncoderCNN().to(DEVICE)
         optimizer = torch.optim.Adam(cnn.parameters(), lr=1e-3)
         criterion = torch.nn.CrossEntropyLoss()
 
-        # ---- train epochs ----
         for epoch in range(15):
             cnn.train()
-            for xb, yb in tqdm.tqdm(loader, desc=f"Epoch {epoch+1}"):
+            for xb, yb in tqdm.tqdm(loader, desc="Epoch {}".format(epoch+1)):
                 xb, yb = xb.to(DEVICE), yb.to(DEVICE)
                 optimizer.zero_grad()
                 out = cnn(xb)
@@ -257,29 +255,30 @@ def train_and_save(weights_dir="model"):
                 loss.backward()
                 optimizer.step()
 
-            # ---- validate ----
             cnn.eval()
             with torch.no_grad():
-                logits = cnn(X_val_t.to(DEVICE))
+                logits = cnn(X_fold_val_t.to(DEVICE))
                 probs = torch.softmax(logits, dim=1)[:, 1].cpu().numpy()
-                auc = skm.roc_auc_score(y_val, probs)
-                print(f"  Val AUC: {auc:.3f}")
+                auc = skm.roc_auc_score(y_fold_val, probs)
+                print("  Val AUC: {:.4f}".format(auc))
             fold_aucs.append(auc)
 
-    print(f"\nMean AUC: {np.mean(fold_aucs):.3f} ± {np.std(fold_aucs):.3f}")
+    print("\nMean 5-Fold AUC: {:.4f} +/- {:.4f}".format(np.mean(fold_aucs), np.std(fold_aucs)))
 
-    # ---- retrain on FULL data ----
-    print("\nRetraining on FULL data …")
-    X_full_t = torch.tensor(X_full, dtype=torch.float32)
+    # ---- Retrain on FULL TRAIN set ----
+    print("\n" + "="*70)
+    print("RETRAINING ON FULL TRAINING SET")
+    print("="*70)
+    X_train_t = torch.tensor(X_train, dtype=torch.float32)
     full_loader = torch.utils.data.DataLoader(
-        torch.utils.data.TensorDataset(X_full_t, torch.tensor(y_full, dtype=torch.long)),
+        torch.utils.data.TensorDataset(X_train_t, torch.tensor(y_train, dtype=torch.long)),
         batch_size=32, shuffle=True)
 
     final_cnn = EncoderCNN().to(DEVICE)
     optimizer = torch.optim.Adam(final_cnn.parameters(), lr=1e-3)
     for epoch in range(15):
         final_cnn.train()
-        for xb, yb in tqdm.tqdm(full_loader, desc=f"Full epoch {epoch+1}"):
+        for xb, yb in tqdm.tqdm(full_loader, desc="Full epoch {}".format(epoch+1)):
             xb, yb = xb.to(DEVICE), yb.to(DEVICE)
             optimizer.zero_grad()
             out = final_cnn(xb)
@@ -287,31 +286,80 @@ def train_and_save(weights_dir="model"):
             loss.backward()
             optimizer.step()
 
-    # ---- extract 16-D embeddings for prototypes ----
+    # ---- Extract embeddings for prototypes ----
     final_cnn.eval()
     embeddings = []
     with torch.no_grad():
-        for xb in torch.utils.data.DataLoader(torch.tensor(X_full, dtype=torch.float32), batch_size=32):
+        for xb in torch.utils.data.DataLoader(torch.tensor(X_train, dtype=torch.float32), batch_size=32):
             z = final_cnn.embed(xb.to(DEVICE)).cpu().numpy()
             embeddings.append(z)
-    embeddings = np.vstack(embeddings)  # (n_subj, embed_dim)
+    embeddings = np.vstack(embeddings)
 
-    # scale embeddings and compute class prototypes
     scaler = StandardScaler().fit(embeddings)
     embeddings_scaled = scaler.transform(embeddings)
-    ctl_emb = embeddings_scaled[y_full == 0].mean(axis=0)
-    adhd_emb = embeddings_scaled[y_full == 1].mean(axis=0)
+    ctl_emb = embeddings_scaled[y_train == 0].mean(axis=0)
+    adhd_emb = embeddings_scaled[y_train == 1].mean(axis=0)
 
-    # ---- save ----
-    torch.save(final_cnn.state_dict(), f"{weights_dir}/cnn_frozen.pth")
-    joblib.dump([ctl_emb, adhd_emb], f"{weights_dir}/softmax_weights.pkl")
-    joblib.dump(scaler, f"{weights_dir}/scaler_16d.pkl")
-    print("✅ Real weights saved:")
-    print(f"  {weights_dir}/cnn_frozen.pth")
-    print(f"  {weights_dir}/softmax_weights.pt")
-    print(f"  {weights_dir}/scaler_16d.pkl")
+    # ---- Save ----
+    torch.save(final_cnn.state_dict(), "{}/cnn_frozen.pth".format(weights_dir))
+    joblib.dump([ctl_emb, adhd_emb], "{}/softmax_weights.pkl".format(weights_dir))
+    joblib.dump(scaler, "{}/scaler_16d.pkl".format(weights_dir))
+    print("\nWeights saved to: {}".format(weights_dir))
+
+    # ---- EVALUATE ON TEST SET ----
+    print("\n" + "="*70)
+    print("EVALUATING ON HOLDOUT TEST SET")
+    print("="*70)
+
+    X_test_t = torch.tensor(X_test, dtype=torch.float32)
+    test_loader = torch.utils.data.DataLoader(X_test_t, batch_size=32, shuffle=False)
+
+    test_embeddings = []
+    with torch.no_grad():
+        for xb in test_loader:
+            z = final_cnn.embed(xb.to(DEVICE)).cpu().numpy()
+            test_embeddings.append(z)
+    test_embeddings = np.vstack(test_embeddings)
+
+    test_embeddings_scaled = scaler.transform(test_embeddings)
+    d_ctl = np.linalg.norm(test_embeddings_scaled - ctl_emb, axis=1)
+    d_adhd = np.linalg.norm(test_embeddings_scaled - adhd_emb, axis=1)
+
+    scores = np.vstack([-d_ctl, -d_adhd]).T
+    exp = np.exp(scores - np.max(scores, axis=1, keepdims=True))
+    probs = exp / exp.sum(axis=1, keepdims=True)
+    prob_adhd_test = probs[:, 1]
+    y_pred_test = (prob_adhd_test > 0.5).astype(int)
+
+    # Calculate metrics
+    acc_test = skm.accuracy_score(y_test, y_pred_test)
+    precision_test = skm.precision_score(y_test, y_pred_test, zero_division=0)
+    recall_test = skm.recall_score(y_test, y_pred_test, zero_division=0)
+    f1_test = skm.f1_score(y_test, y_pred_test, zero_division=0)
+    roc_auc_test = skm.roc_auc_score(y_test, prob_adhd_test)
+
+    cm_test = skm.confusion_matrix(y_test, y_pred_test)
+    tn_test, fp_test, fn_test, tp_test = cm_test.ravel()
+
+    print("\nTEST SET RESULTS:")
+    print("  Accuracy:  {:.4f} ({:.2f}%)".format(acc_test, acc_test*100))
+    print("  Precision: {:.4f}".format(precision_test))
+    print("  Recall:    {:.4f}".format(recall_test))
+    print("  F1-Score:  {:.4f}".format(f1_test))
+    print("  ROC-AUC:   {:.4f}".format(roc_auc_test))
+
+    print("\nConfusion Matrix (Test Set):")
+    print("                Predicted")
+    print("            Control  ADHD")
+    print("  Control      {}    {}".format(tn_test, fp_test))
+    print("  ADHD         {}    {}".format(fn_test, tp_test))
+
+    print("\n" + "="*70)
+    print("SUMMARY:")
+    print("  Train/Val (5-fold): {:.4f}".format(np.mean(fold_aucs)))
+    print("  Test Set Accuracy:  {:.4f} ({:.2f}%)".format(acc_test, acc_test*100))
+    print("="*70)
 
 
-# ---------- 5. RUN NOW ----------
 if __name__ == "__main__":
     train_and_save()
